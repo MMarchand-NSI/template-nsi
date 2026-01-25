@@ -1,44 +1,47 @@
 {
-   //! NE PAS TOUCHER CE FICHIER A MOINS QUE VOUS SACHIEZ TRES EXACTEMENT CE QUE VOUS FAITES.
-
-  "python.defaultInterpreterPath": ".venv/bin/python",
-
+  //! NE PAS TOUCHER CE FICHIER A MOINS QUE VOUS SACHIEZ TRES EXACTEMENT CE QUE VOUS FAITES.
   // Paramètres de prise en compte des tests
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
-  "python.testing.pytestEnabled": true,    // On utilise pytest
+  "python.testing.pytestEnabled": true, // On utilise pytest
   "python.testing.unittestEnabled": false, // Pas unittest
-
   "chat.disableAIFeatures": true,
   "chat.commandCenter.enabled": false,
   "terminal.integrated.enablePersistentSessions": false,
   "terminal.integrated.persistentSessionReviveProcess": "never",
-
   // Configuration git
-  "git.postCommitCommand": "push",   // push auto juste après chaque commit
-  "git.autofetch": true,             // fetch régulier
-  "git.confirmSync": false,           // pas de popup de confirmation
-
-
-  "python.terminal.activateEnvironment": false,
-  "terminal.integrated.defaultProfile.windows": "CMD venv",
+  "git.postCommitCommand": "push", // push auto juste après chaque commit
+  "git.autofetch": true, // fetch régulier
+  "git.confirmSync": false, // pas de popup de confirmation
+  "python.terminal.activateEnvironment": true,
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
   "terminal.integrated.fontFamily": "'JetBrains Mono', 'FiraCode Nerd Font Mono', Consolas, 'Courier New', monospace",
   "terminal.integrated.fontLigatures.enabled": true,
   "terminal.integrated.profiles.windows": {
     "CMD venv": {
       "path": "C:\\Windows\\System32\\cmd.exe",
-      "args": ["/D", "/K", "call .\\.venv\\Scripts\\activate.bat && prompt $E[92m(venv)$E[0m $P$G && echo Terminal activé"],
+      "args": [
+        "/D",
+        "/K",
+        "call .\\.venv\\Scripts\\activate.bat && prompt $E[92m(venv)$E[0m $P$G && echo Terminal activé"
+      ],
       "icon": "python",
       "color": "terminal.ansiMagenta",
     },
     "REPL elm": {
       "path": "C:\\Windows\\System32\\cmd.exe",
-      "args": ["/D", "/K", "(if not exist elm md elm) && cd /d elm && (if not exist elm.json elm init) && elm repl && exit"],
+      "args": [
+        "/D",
+        "/K",
+        "(if not exist elm md elm) && cd /d elm && (if not exist elm.json elm init) && elm repl && exit"
+      ],
       "icon": "star",
       "color": "terminal.ansiYellow",
     },
     "MSYS2 UCRT64": {
-      "path": ["C:\\Programmes_Portables\\MSYS2_FR_1500\\usr\\bin\\bash.exe", 
-               "C:\\msys64\\usr\\bin\\bash.exe"],
+      "path": [
+        "C:\\Programmes_Portables\\MSYS2_FR_1500\\usr\\bin\\bash.exe",
+        "C:\\msys64\\usr\\bin\\bash.exe"
+      ],
       "args": [
         "-l"
       ],
@@ -51,61 +54,24 @@
       "color": "terminal.ansiGreen"
     }
   },
-
-//  "files.exclude": {
-//    "**/.git": true,
-//    "**/.svn": true,
-//    "**/.hg": true,
-//    "**/.DS_Store": true,
-//    "**/Thumbs.db": true,
-//    "**/pyproject.toml": false,
-//    "**/.python-version": false,
-//    "**/uv.lock":true    
-//  },
+  //  "files.exclude": {
+  //    "**/.git": true,
+  //    "**/.svn": true,
+  //    "**/.hg": true,
+  //    "**/.DS_Store": true,
+  //    "**/Thumbs.db": true,
+  //    "**/pyproject.toml": false,
+  //    "**/.python-version": false,
+  //    "**/uv.lock":true    
+  //  },
   "java.configuration.updateBuildConfiguration": "interactive",
-
   "editor.fontFamily": "'JetBrains Mono', 'FiraCode Nerd Font', Consolas, 'Courier New', monospace",
   "editor.fontLigatures": true,
   "extensions.ignoreRecommendations": true,
-  "continue.telemetryEnabled": false,
   "telemetry.feedback.enabled": false,
   "telemetry.editStats.enabled": false,
   "python.analysis.extraPaths": [
-    "./python/projets/lsystems",
-    "./python/projets/clientserveur"
-  ],
-
-
-"taskexplorer.enabledTasks": {
-"ant": false,
-"apppublisher": false,
-"bash": false,
-"batch": false,
-"composer": false,
-"eslint": false,
-"gradle": false,
-"grunt": false,
-"gulp": false,
-"jenkins": false,
-"laravel": false,
-"make": false,
-"maven": false,
-"nodejs": false,
-"npm": false,
-"nsis": false,
-"perl": false,
-"pipenv": false,
-"powershell": false,
-"python": false,
-"ruby": false,
-"tsc": false,
-"webpack": false,
-"webpackwrap": false,
-"workspace": true
-},
-
-  "taskexplorer.excludeTask": [
-    "^aux-.*"
+    "./python/exos",
+    "./python/projets",
   ]
-
 }

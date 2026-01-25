@@ -2,19 +2,6 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "📄 Aide (PDF)",
-            "type": "process",
-            "command": "${execPath}",
-            "args": [
-                "-r",
-                "${workspaceFolder}/.vscode/aide.pdf"
-            ],
-            "presentation": {
-                "reveal": "never"
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "♻️ uv sync",
             "icon": {
                 "id": "sync",
@@ -191,6 +178,15 @@
                 "clear": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "🌐 Site du prof",
+            "icon": {
+                "id": "globe",
+                "color": "terminal.ansiCyan"
+            },
+            "command": "${input:openSiteProf}",
+            "problemMatcher": []
         }
     ],
     "inputs": [
@@ -200,8 +196,6 @@
             "description": "Quel composant installer ?",
             "options": [
                 "msys2",
-                "homebrew",
-                "nodejs",
                 "elm",
                 "rust",
                 "nasm",
@@ -211,11 +205,11 @@
             "default": "rust"
         },
         {
-            "id": "openPdf",
+            "id": "openSiteProf",
             "type": "command",
-            "command": "vscode.open",
+            "command": "simpleBrowser.show",
             "args": [
-                "${workspaceFolderUri}/.vscode/aide.pdf"
+                "https://mmarchand-nsi.github.io"
             ]
         }
     ]

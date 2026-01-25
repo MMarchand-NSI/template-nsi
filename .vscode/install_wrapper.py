@@ -1,11 +1,15 @@
 """
-install_wrapper.py - Wrapper multi-plateforme pour les installations
+install_wrapper.py - Wrapper multi-plateforme pour les installations et opérations
 
 Ce script détecte automatiquement le système d'exploitation et appelle
-le script d'installation approprié :
+le script d'installation/opération approprié :
 - Windows : installs.py
 - Linux   : installs_linux.py
 - macOS   : installs_macos.py
+
+Supporte à la fois :
+- Les installations de composants (elm, rust, nasm, qemu, postgresql, etc.)
+- Les opérations PostgreSQL (postgres-start, postgres-stop, postgres-create)
 """
 
 import sys
@@ -67,6 +71,26 @@ def get_available_components(os_type):
         return []
 
 
+def get_all_commands(os_type):
+    """Retourne la liste de toutes les commandes disponibles (installations + opérations)"""
+    import importlib
+
+    module_name = get_install_module_name(os_type)
+    if not module_name:
+        return []
+
+    try:
+        # Importer dynamiquement le module
+        module = importlib.import_module(module_name)
+        # Récupérer les deux dictionnaires
+        installations = getattr(module, 'INSTALLATIONS', {})
+        operations = getattr(module, 'OPERATIONS', {})
+        # Fusionner et retourner les clés
+        return list({**installations, **operations}.keys())
+    except (ImportError, AttributeError):
+        return []
+
+
 if __name__ == "__main__":
     try:
         # Détecter l'OS
@@ -80,21 +104,22 @@ if __name__ == "__main__":
             print(f"❌ Script d'installation introuvable: {install_script}")
             sys.exit(1)
 
-        # Obtenir les composants disponibles
-        available = get_available_components(os_type)
+        # Obtenir les composants et opérations disponibles
+        available_components = get_available_components(os_type)
+        all_commands = get_all_commands(os_type)
 
         # Passer tous les arguments au script approprié
         if len(sys.argv) < 2:
             # Afficher l'aide
-            print(f"Composants disponibles sur {os_type}: {', '.join(available)}")
-            print(f"\nUsage: python install_wrapper.py <composant>")
+            print(f"Composants installables sur {os_type}: {', '.join(available_components)}")
+            print(f"\nUsage: python install_wrapper.py <composant|opération>")
             sys.exit(1)
 
-        # Vérifier que le composant est disponible sur cette plateforme
+        # Vérifier que la commande est disponible sur cette plateforme
         component = sys.argv[1].lower()
-        if component not in available:
-            print(f"⚠️  Le composant '{component}' n'est pas disponible sur {os_type}")
-            print(f"ℹ️  Composants disponibles: {', '.join(available)}")
+        if component not in all_commands:
+            print(f"⚠️  La commande '{component}' n'est pas disponible sur {os_type}")
+            print(f"ℹ️  Composants installables: {', '.join(available_components)}")
             sys.exit(1)
 
         # Exécuter le script approprié avec les arguments

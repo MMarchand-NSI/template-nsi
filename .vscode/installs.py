@@ -14,13 +14,17 @@ Le script distingue deux environnements possibles :
 Composants installables :
 --------------------------
 - msys2       : Installation de MSYS2 via winget (environnement personnel uniquement)
-- vscode      : Visual Studio Code via winget
-- git         : Git (système de contrôle de version) via winget
 - elm         : Node.js + Elm (langage de programmation fonctionnel pour le web)
 - rust        : Compilateur Rust et Cargo
 - nasm        : Assembleur NASM + GDB (débogueur)
 - qemu        : Émulateur de machines virtuelles
 - postgresql  : Serveur de base de données PostgreSQL (avec initialisation automatique)
+
+Opérations PostgreSQL :
+-----------------------
+- postgres-start  : Démarre le serveur PostgreSQL
+- postgres-stop   : Arrête le serveur PostgreSQL
+- postgres-create : Crée une nouvelle base de données
 
 Fonctions principales :
 -----------------------
@@ -63,10 +67,39 @@ import subprocess
 import sys
 import os
 import msys2
+from msys2 import msys2_needed
 import utils
 
 if sys.platform == "win32":
     import winreg
+
+def get_env_var(var: str) -> str:
+    """
+    Récupère la valeur d'une variable d'environnement utilisateur depuis le registre Windows.
+
+    Args:
+        var: Nom de la variable d'environnement à récupérer
+
+    Returns:
+        La valeur de la variable, ou une chaîne vide si elle n'existe pas
+    """
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r'Environment',
+            0,
+            winreg.KEY_READ
+        )
+        try:
+            value, _ = winreg.QueryValueEx(key, var)
+            return value
+        except FileNotFoundError:
+            return ""
+        finally:
+            winreg.CloseKey(key)
+    except Exception:
+        return ""
+
 
 def set_env_var(var: str, val: str):
     """
@@ -105,135 +138,50 @@ def set_env_var(var: str, val: str):
         winreg.CloseKey(key)
 
 
-def winget_install(
-    nom: str,
-    winget_id: str,
-    commande_verif: list[str] = None,
-    verif_stdout: str = None,
-    url_manuel: str = None
-):
-    """
-    Fonction générique pour installer un logiciel via winget s'il n'est pas déjà installé.
-
-    Args:
-        nom: Nom du logiciel à afficher dans les messages
-        winget_id: ID winget du package (ex: "Git.Git", "Microsoft.VisualStudioCode")
-        commande_verif: Commande à exécuter pour vérifier si déjà installé (ex: ["git", "--version"])
-                       Si None, utilise winget list
-        verif_stdout: Chaîne à chercher dans stdout pour confirmer l'installation
-        url_manuel: URL pour téléchargement manuel si winget n'est pas disponible
-    """
-    try:
-        # Vérification si le logiciel est déjà installé
-        utils.log_info(f"Vérification de l'installation de {nom}...")
-
-        if commande_verif:
-            # Vérification via une commande spécifique
-            try:
-                result = subprocess.run(
-                    commande_verif,
-                    capture_output=True,
-                    text=True,
-                    check=False
-                )
-                if result.returncode == 0:
-                    utils.log_success(f"{nom} est déjà installé ({result.stdout.strip()})")
-                    return
-            except FileNotFoundError:
-                # La commande n'existe pas, donc pas installé
-                pass
-        else:
-            # Vérification via winget list
-            result = subprocess.run(
-                ["winget", "list", "--id", winget_id],
-                capture_output=True,
-                text=True
-            )
-            if verif_stdout and verif_stdout in result.stdout:
-                utils.log_success(f"{nom} est déjà installé")
-                return
-
-        # Installation via winget
-        utils.log_info(f"Installation de {nom}...")
-        subprocess.run(
-            ["winget", "install", "--id", winget_id, "--source", "winget", "--silent"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        utils.log_success(f"{nom} installé avec succès")
-        utils.log_info("Redémarrez votre terminal pour que les modifications prennent effet")
-
-    except subprocess.CalledProcessError as e:
-        utils.log_error(f"Erreur lors de l'installation de {nom}: {e}")
-        if e.stdout:
-            print(e.stdout)
-        if e.stderr:
-            print(e.stderr)
-    except FileNotFoundError:
-        utils.log_error("winget n'est pas disponible sur ce système")
-        if url_manuel:
-            utils.log_info(f"Téléchargez et installez {nom} manuellement depuis: {url_manuel}")
-
-
 def install_msys2():
     """Installe MSYS2 avec winget (--source winget) si nécessaire et si possible.
-    Met à jour dans tous les cas"""
+    Met à jour dans tous les cas.
+    Ouvre un shell MSYS2 pour l'initialisation"""
 
     msys2.installer()
 
 
-def install_vscode():
-    """Installe Visual Studio Code via winget s'il n'est pas déjà installé"""
-    winget_install(
-        nom="Visual Studio Code",
-        winget_id="Microsoft.VisualStudioCode",
-        verif_stdout="Microsoft.VisualStudioCode",
-        url_manuel="https://code.visualstudio.com/"
-    )
-
-
-def install_git():
-    """Installe Git via winget s'il n'est pas déjà installé"""
-    winget_install(
-        nom="Git",
-        winget_id="Git.Git",
-        commande_verif=["git", "--version"],
-        url_manuel="https://git-scm.com/"
-    )
-
-
+@msys2_needed
 def install_elm():
     """Installe nodejs et elm (via npm) dans msys2"""
-    msys2.executer("pacman -S --noconfirm mingw-w64-ucrt-x86_64-nodejs")
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-nodejs")
     msys2.executer("npm install -g elm")
 
 
+@msys2_needed
 def install_rust():
     """
     Installe Rust dans msys2
     """
-    msys2.executer("pacman -S --noconfirm mingw-w64-ucrt-x86_64-rust")
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-rust")
 
 
+@msys2_needed
 def install_nasm():
     """
     Installe nasm dans msys2
     """
-    msys2.executer("pacman -S --noconfirm mingw-w64-ucrt-x86_64-nasm mingw-w64-ucrt-x86_64-gdb")
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-nasm mingw-w64-ucrt-x86_64-gdb")
 
+@msys2_needed
 def install_qemu():
     """
     Installe nasm dans msys2
     """
-    msys2.executer("pacman -S --noconfirm mingw-w64-ucrt-x86_64-qemu")
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-qemu")
 
 
+@msys2_needed
 def install_postgresql():
     """
     Installe et initialise postgresql
     """
-    msys2.executer("pacman -S --noconfirm mingw-w64-ucrt-x86_64-postgresql")
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-postgresql")
     postgres_init()
 
 
@@ -244,6 +192,7 @@ def get_database_dir():
     database_msys2 = f"$(cygpath -u '{home_windows}')/DATABASE"
     return database_msys2
 
+@msys2_needed
 def postgres_init():
     """
     Initialise postgresql en UTF-8 français dans le home utilisateur/DATABASE
@@ -264,6 +213,7 @@ def postgres_init():
     msys2.executer("rm /tmp/pwfile")
 
 
+@msys2_needed
 def postgres_start():
     """Démarre l'instance PostgreSQL"""
     database_msys2 = get_database_dir()
@@ -283,6 +233,7 @@ def postgres_start():
     utils.log_success("Serveur PostgreSQL démarré")
 
 
+@msys2_needed
 def postgres_stop():
     """Arrête l'instance PostgreSQL"""
     database_msys2 = get_database_dir()
@@ -290,35 +241,44 @@ def postgres_stop():
     utils.log_success("Serveur PostgreSQL arrêté")
 
 
+@msys2_needed
 def postgres_create_db(nom: str):
     """Crée une base de données PostgreSQL"""
     msys2.executer(f"createdb -U padawan -E UTF8 {nom}")
     utils.log_success(f"Base de données '{nom}' créée")
 
 
-# Dictionnaire des fonctions d'installation et opérations
+# Dictionnaire des fonctions d'installation
 INSTALLATIONS = {
     "msys2": install_msys2,
-    "vscode": install_vscode,
-    "git": install_git,
     "elm": install_elm,
     "rust": install_rust,
     "nasm": install_nasm,
     "qemu": install_qemu,
-    "postgresql": install_postgresql,
-    "postgres-start": postgres_start,
-    "postgres-stop": postgres_stop
+    "postgresql": install_postgresql
 }
 
-# Liste des composants disponibles
+# Dictionnaire des opérations PostgreSQL
+OPERATIONS = {
+    "postgres-start": postgres_start,
+    "postgres-stop": postgres_stop,
+    "postgres-create": postgres_create_db
+}
+
+# Liste des composants installables (pour tasks.json)
 AVAILABLE_COMPONENTS = list(INSTALLATIONS.keys())
 
 
 if __name__ == "__main__":
     import sys
 
+    # Fusion des deux dictionnaires pour la CLI
+    ALL_COMMANDS = {**INSTALLATIONS, **OPERATIONS}
+
     if len(sys.argv) < 2:
-        print(f"Usage: python installs.py [{' | '.join(INSTALLATIONS.keys())} | postgres-create <nom>]")
+        print(f"Installations disponibles: {', '.join(INSTALLATIONS.keys())}")
+        print(f"Opérations disponibles: {', '.join(OPERATIONS.keys())}")
+        print(f"\nUsage: python installs.py <composant|opération> [args]")
         sys.exit(1)
 
     choix = sys.argv[1].lower()
@@ -328,9 +288,10 @@ if __name__ == "__main__":
             print("Usage: python installs.py postgres-create <nom>")
             sys.exit(1)
         postgres_create_db(sys.argv[2])
-    elif choix in INSTALLATIONS:
-        INSTALLATIONS[choix]()
+    elif choix in ALL_COMMANDS:
+        ALL_COMMANDS[choix]()
     else:
         print(f"Option inconnue: {choix}")
-        print(f"Options disponibles: {', '.join(INSTALLATIONS.keys())}, postgres-create")
+        print(f"Installations disponibles: {', '.join(INSTALLATIONS.keys())}")
+        print(f"Opérations disponibles: {', '.join(OPERATIONS.keys())}")
         sys.exit(1)

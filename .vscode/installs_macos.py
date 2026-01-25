@@ -10,12 +10,17 @@ Gestionnaire de paquets :
 
 Composants installables :
 --------------------------
-- nodejs      : Node.js et npm
 - elm         : Node.js + Elm (langage de programmation fonctionnel pour le web)
 - rust        : Compilateur Rust et Cargo
 - nasm        : Assembleur NASM + GDB (débogueur)
 - qemu        : Émulateur de machines virtuelles
 - postgresql  : Serveur de base de données PostgreSQL (avec initialisation automatique)
+
+Opérations PostgreSQL :
+-----------------------
+- postgres-start  : Démarre le serveur PostgreSQL
+- postgres-stop   : Arrête le serveur PostgreSQL
+- postgres-create : Crée une nouvelle base de données
 
 Fonctions principales :
 -----------------------
@@ -100,14 +105,9 @@ def install_package(package_name: str, brew_pkg: str, cask: bool = False):
     print(f"✅ {package_name} installé avec succès")
 
 
-def install_nodejs():
-    """Installe Node.js et npm"""
-    install_package("Node.js", brew_pkg="node")
-
-
 def install_elm():
     """Installe nodejs et elm (via npm)"""
-    install_nodejs()
+    install_package("Node.js", brew_pkg="node")
     print("✨ Installation d'Elm via npm...")
     executer("npm install -g elm")
     print("✅ Elm installé avec succès")
@@ -221,25 +221,34 @@ def postgres_create_db(nom: str):
     print(f"✅ Base de données '{nom}' créée")
 
 
-# Dictionnaire des fonctions d'installation et opérations
+# Dictionnaire des fonctions d'installation
 INSTALLATIONS = {
-    "nodejs": install_nodejs,
     "elm": install_elm,
     "rust": install_rust,
     "nasm": install_nasm,
     "qemu": install_qemu,
-    "postgresql": install_postgresql,
-    "postgres-start": postgres_start,
-    "postgres-stop": postgres_stop
+    "postgresql": install_postgresql
 }
 
-# Liste des composants disponibles
+# Dictionnaire des opérations PostgreSQL
+OPERATIONS = {
+    "postgres-start": postgres_start,
+    "postgres-stop": postgres_stop,
+    "postgres-create": postgres_create_db
+}
+
+# Liste des composants installables (pour tasks.json)
 AVAILABLE_COMPONENTS = list(INSTALLATIONS.keys())
 
 
 if __name__ == "__main__":
+    # Fusion des deux dictionnaires pour la CLI
+    ALL_COMMANDS = {**INSTALLATIONS, **OPERATIONS}
+
     if len(sys.argv) < 2:
-        print(f"Usage: python installs_macos.py [{' | '.join(INSTALLATIONS.keys())} | postgres-create <nom>]")
+        print(f"Installations disponibles: {', '.join(INSTALLATIONS.keys())}")
+        print(f"Opérations disponibles: {', '.join(OPERATIONS.keys())}")
+        print(f"\nUsage: python installs_macos.py <composant|opération> [args]")
         sys.exit(1)
 
     choix = sys.argv[1].lower()
@@ -253,19 +262,20 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"❌ Erreur: {e}")
             sys.exit(1)
-    elif choix in INSTALLATIONS:
+    elif choix in ALL_COMMANDS:
         try:
-            # Vérifier que Homebrew est installé
-            if not check_homebrew():
+            # Vérifier que Homebrew est installé pour les installations
+            if choix in INSTALLATIONS and not check_homebrew():
                 print("❌ Homebrew n'est pas installé")
                 print("ℹ️  Installez d'abord Homebrew en suivant les instructions sur https://brew.sh")
                 sys.exit(1)
 
-            INSTALLATIONS[choix]()
+            ALL_COMMANDS[choix]()
         except Exception as e:
             print(f"❌ Erreur: {e}")
             sys.exit(1)
     else:
         print(f"Option inconnue: {choix}")
-        print(f"Options disponibles: {', '.join(INSTALLATIONS.keys())}, postgres-create")
+        print(f"Installations disponibles: {', '.join(INSTALLATIONS.keys())}")
+        print(f"Opérations disponibles: {', '.join(OPERATIONS.keys())}")
         sys.exit(1)
