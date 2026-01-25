@@ -1,0 +1,49 @@
+[project]
+name = "prog-nsi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+
+# Outils de build
+
+[build-system]
+requires = ["hatchling>=1.25", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/structures"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "python/structures"
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+## OUTILS DE DEVELOPPEMENT
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",        # Outil de test
+    "pytest-cov>=7.0.0",    # Outil de couverture de tests
+    "pdoc3>=0.11.6",        # Outil de documentation
+    "psutil>=7.2.1",        # Outil pour cles usb
+    "djlint>=1.36.4",        # Outil linting web
+]
+
+# connfiguration des tests
+# on dit à pytest quels répertoires sont concernés
+# On dit qu'on cherche tous les doctests
+# et que ça ne concerne que les fichiers pythons.
+[tool.pytest.ini_options]
+testpaths = ["python/structures/", "python/exos/"]
+addopts = "--doctest-modules -v"
+python_files = ["*.py"]

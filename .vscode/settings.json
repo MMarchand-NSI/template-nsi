@@ -1,22 +1,13 @@
 {
    //! NE PAS TOUCHER CE FICHIER A MOINS QUE VOUS SACHIEZ TRES EXACTEMENT CE QUE VOUS FAITES.
+
   "python.defaultInterpreterPath": ".venv/bin/python",
-  "continue.enableConsole": true,
+
   // Paramètres de prise en compte des tests
   "python.testing.autoTestDiscoverOnSaveEnabled": true,
   "python.testing.pytestEnabled": true,    // On utilise pytest
   "python.testing.unittestEnabled": false, // Pas unittest
 
-
-  "markdown-pdf.includeDefaultStyles":false,
-  "markdown-pdf.format": "A4",
-  "markdown-pdf.stylesRelativePathFile": true,
-  "markdown-pdf.styles": ["style.css"],
-  "markdown-pdf.displayHeaderFooter": false,
-  "markdown-pdf.margin.top": "0.5cm",
-  "markdown-pdf.margin.bottom": "0.5cm",
-
-  "workbench.startupEditor": "terminal",
   "chat.disableAIFeatures": true,
   "chat.commandCenter.enabled": false,
   "terminal.integrated.enablePersistentSessions": false,

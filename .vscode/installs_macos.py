@@ -6,11 +6,10 @@ sous macOS. Il utilise Homebrew comme gestionnaire de paquets.
 
 Gestionnaire de paquets :
 -------------------------
-- Homebrew (brew) : Le gestionnaire de paquets standard pour macOS
+- Homebrew (brew) : Le gestionnaire de paquets standard pour macOS (doit être installé au préalable)
 
 Composants installables :
 --------------------------
-- homebrew    : Installation de Homebrew (si non installé)
 - nodejs      : Node.js et npm
 - elm         : Node.js + Elm (langage de programmation fonctionnel pour le web)
 - rust        : Compilateur Rust et Cargo
@@ -22,9 +21,6 @@ Fonctions principales :
 -----------------------
 check_homebrew() -> bool
     Vérifie si Homebrew est installé.
-
-install_homebrew()
-    Installe Homebrew si non présent.
 
 executer(cmd: str)
     Exécute une commande shell.
@@ -43,9 +39,9 @@ Exemples :
     python installs_macos.py rust
     python installs_macos.py postgresql
 
-Note :
-------
-Homebrew sera automatiquement installé s'il n'est pas déjà présent sur le système.
+Prérequis :
+-----------
+Homebrew doit être installé au préalable. Pour l'installer, visitez https://brew.sh
 """
 
 import subprocess
@@ -75,34 +71,6 @@ def executer(cmd: str):
         sys.exit(1)
 
     return result
-
-
-def install_homebrew():
-    """Installe Homebrew si non présent"""
-    if check_homebrew():
-        print("✅ Homebrew est déjà installé")
-        return
-
-    print("✨ Installation de Homebrew...")
-    print("ℹ️  Vous devrez peut-être entrer votre mot de passe")
-
-    # Script officiel d'installation de Homebrew
-    install_script = '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-    executer(install_script)
-
-    print("✅ Homebrew installé avec succès")
-
-    # Ajouter Homebrew au PATH selon l'architecture
-    arch_check = subprocess.run("uname -m", shell=True, capture_output=True, text=True)
-    arch = arch_check.stdout.strip()
-
-    if arch == "arm64":  # Apple Silicon (M1/M2/M3)
-        brew_path = "/opt/homebrew/bin/brew"
-    else:  # Intel
-        brew_path = "/usr/local/bin/brew"
-
-    print(f"ℹ️  Pour utiliser Homebrew, vous devrez peut-être exécuter:")
-    print(f'    eval "$({brew_path} shellenv)"')
 
 
 def install_package(package_name: str, brew_pkg: str, cask: bool = False):
@@ -255,7 +223,6 @@ def postgres_create_db(nom: str):
 
 # Dictionnaire des fonctions d'installation et opérations
 INSTALLATIONS = {
-    "homebrew": install_homebrew,
     "nodejs": install_nodejs,
     "elm": install_elm,
     "rust": install_rust,
@@ -288,12 +255,11 @@ if __name__ == "__main__":
             sys.exit(1)
     elif choix in INSTALLATIONS:
         try:
-            # Vérifier que Homebrew est installé (sauf si on installe Homebrew)
-            if choix != "homebrew" and not check_homebrew():
-                print("⚠️  Homebrew n'est pas installé")
-                print("ℹ️  Installation automatique de Homebrew...")
-                install_homebrew()
-                print()
+            # Vérifier que Homebrew est installé
+            if not check_homebrew():
+                print("❌ Homebrew n'est pas installé")
+                print("ℹ️  Installez d'abord Homebrew en suivant les instructions sur https://brew.sh")
+                sys.exit(1)
 
             INSTALLATIONS[choix]()
         except Exception as e:

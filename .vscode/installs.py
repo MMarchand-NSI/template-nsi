@@ -14,6 +14,8 @@ Le script distingue deux environnements possibles :
 Composants installables :
 --------------------------
 - msys2       : Installation de MSYS2 via winget (environnement personnel uniquement)
+- vscode      : Visual Studio Code via winget
+- git         : Git (système de contrôle de version) via winget
 - elm         : Node.js + Elm (langage de programmation fonctionnel pour le web)
 - rust        : Compilateur Rust et Cargo
 - nasm        : Assembleur NASM + GDB (débogueur)
@@ -103,11 +105,102 @@ def set_env_var(var: str, val: str):
         winreg.CloseKey(key)
 
 
+def winget_install(
+    nom: str,
+    winget_id: str,
+    commande_verif: list[str] = None,
+    verif_stdout: str = None,
+    url_manuel: str = None
+):
+    """
+    Fonction générique pour installer un logiciel via winget s'il n'est pas déjà installé.
+
+    Args:
+        nom: Nom du logiciel à afficher dans les messages
+        winget_id: ID winget du package (ex: "Git.Git", "Microsoft.VisualStudioCode")
+        commande_verif: Commande à exécuter pour vérifier si déjà installé (ex: ["git", "--version"])
+                       Si None, utilise winget list
+        verif_stdout: Chaîne à chercher dans stdout pour confirmer l'installation
+        url_manuel: URL pour téléchargement manuel si winget n'est pas disponible
+    """
+    try:
+        # Vérification si le logiciel est déjà installé
+        utils.log_info(f"Vérification de l'installation de {nom}...")
+
+        if commande_verif:
+            # Vérification via une commande spécifique
+            try:
+                result = subprocess.run(
+                    commande_verif,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if result.returncode == 0:
+                    utils.log_success(f"{nom} est déjà installé ({result.stdout.strip()})")
+                    return
+            except FileNotFoundError:
+                # La commande n'existe pas, donc pas installé
+                pass
+        else:
+            # Vérification via winget list
+            result = subprocess.run(
+                ["winget", "list", "--id", winget_id],
+                capture_output=True,
+                text=True
+            )
+            if verif_stdout and verif_stdout in result.stdout:
+                utils.log_success(f"{nom} est déjà installé")
+                return
+
+        # Installation via winget
+        utils.log_info(f"Installation de {nom}...")
+        subprocess.run(
+            ["winget", "install", "--id", winget_id, "--source", "winget", "--silent"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        utils.log_success(f"{nom} installé avec succès")
+        utils.log_info("Redémarrez votre terminal pour que les modifications prennent effet")
+
+    except subprocess.CalledProcessError as e:
+        utils.log_error(f"Erreur lors de l'installation de {nom}: {e}")
+        if e.stdout:
+            print(e.stdout)
+        if e.stderr:
+            print(e.stderr)
+    except FileNotFoundError:
+        utils.log_error("winget n'est pas disponible sur ce système")
+        if url_manuel:
+            utils.log_info(f"Téléchargez et installez {nom} manuellement depuis: {url_manuel}")
+
+
 def install_msys2():
     """Installe MSYS2 avec winget (--source winget) si nécessaire et si possible.
     Met à jour dans tous les cas"""
 
     msys2.installer()
+
+
+def install_vscode():
+    """Installe Visual Studio Code via winget s'il n'est pas déjà installé"""
+    winget_install(
+        nom="Visual Studio Code",
+        winget_id="Microsoft.VisualStudioCode",
+        verif_stdout="Microsoft.VisualStudioCode",
+        url_manuel="https://code.visualstudio.com/"
+    )
+
+
+def install_git():
+    """Installe Git via winget s'il n'est pas déjà installé"""
+    winget_install(
+        nom="Git",
+        winget_id="Git.Git",
+        commande_verif=["git", "--version"],
+        url_manuel="https://git-scm.com/"
+    )
 
 
 def install_elm():
@@ -206,6 +299,8 @@ def postgres_create_db(nom: str):
 # Dictionnaire des fonctions d'installation et opérations
 INSTALLATIONS = {
     "msys2": install_msys2,
+    "vscode": install_vscode,
+    "git": install_git,
     "elm": install_elm,
     "rust": install_rust,
     "nasm": install_nasm,

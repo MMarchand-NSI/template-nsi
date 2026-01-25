@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 def log_info(message: str):
     """Affiche un message d'information."""
