@@ -1,0 +1,222 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "📄 Aide (PDF)",
+            "type": "process",
+            "command": "${execPath}",
+            "args": [
+                "-r",
+                "${workspaceFolder}/.vscode/aide.pdf"
+            ],
+            "presentation": {
+                "reveal": "never"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "♻️ uv sync",
+            "icon": {
+                "id": "sync",
+                "color": "terminal.ansiYellow"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "sync"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🛠️ Setup Environment NSI",
+            "icon": {
+                "id": "settings",
+                "color": "terminal.ansiYellow"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/setup.py"
+            ],
+            "dependsOn": [
+                "uv sync"
+            ],
+            "dependsOrder": "sequence",
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true,
+                "focus": false,
+                "close": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🛠️ Setup Manuel",
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/setup.py"
+            ],
+            "dependsOn": [
+                "uv sync"
+            ],
+            "dependsOrder": "sequence",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🧩 Installer Composant",
+            "icon": {
+                "id": "cloud-download",
+                "color": "terminal.ansiGreen"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/install_wrapper.py",
+                "${input:choixInstall}"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🐘 🚀 PostgreSQL: Démarrer",
+            "icon": {
+                "id": "debug-start",
+                "color": "terminal.ansiGreen"
+            },
+            "type": "process",
+            "promptOnClose": true,
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/install_wrapper.py",
+                "postgres-start"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": false,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🐘 🌙 PostgreSQL: Arrêter",
+            "icon": {
+                "id": "debug-stop",
+                "color": "terminal.ansiRed"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/install_wrapper.py",
+                "postgres-stop"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": false,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "💻 ⟶ 🔑 Sauvegarde USB",
+            "icon": {
+                "id": "save",
+                "color": "terminal.ansiBlue"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/run_sauvegarde.py"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🔑 ⟶ 💻 Import depuis USB",
+            "icon": {
+                "id": "cloud-download",
+                "color": "terminal.ansiMagenta"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/run_import.py"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "choixInstall",
+            "type": "pickString",
+            "description": "Quel composant installer ?",
+            "options": [
+                "msys2",
+                "homebrew",
+                "nodejs",
+                "elm",
+                "rust",
+                "nasm",
+                "qemu",
+                "postgresql"
+            ],
+            "default": "rust"
+        },
+        {
+            "id": "openPdf",
+            "type": "command",
+            "command": "vscode.open",
+            "args": [
+                "${workspaceFolderUri}/.vscode/aide.pdf"
+            ]
+        }
+    ]
+}
