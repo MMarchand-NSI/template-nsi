@@ -18,7 +18,7 @@ Fonctionnalités :
      * tomoki1207.pdf : Visualisation PDF
      * aaron-bond.better-comments : Amélioration des commentaires
      * fill-labs.dependi : Gestion des dépendances
-
+     * sanaajani.taskrunnercode : UI pour les tasks
 3. Configuration de l'environnement
    - Configure l'encodage UTF-8 pour Windows (stdout/stderr)
    - Affichage coloré avec emojis pour un meilleur feedback visuel
@@ -39,7 +39,6 @@ import sys
 import subprocess
 import urllib.request
 from pathlib import Path
-from typing import Tuple
 import platform
 import io
 import utils
@@ -175,7 +174,7 @@ def install_extension(extension_id: str) -> bool:
     except Exception:
         return False
 
-def check_vscode_extensions() -> Tuple[int, int, int]:
+def check_vscode_extensions() -> tuple[int, int, int]:
     """
     Vérifie et installe les extensions VSCode requises.
     
@@ -213,10 +212,10 @@ def check_vscode_extensions() -> Tuple[int, int, int]:
 # GESTION DES VARIABLES D'ENVIRONNEMENT
 # ============================================================================
 
-def check_env_var():
+def check_set_env_var():
     """
     TODO Vérifier les variables d'environnement.
-    PATH doit avoir msys2/ucrt64/bin
+    PATH utilisateur doit avoir msys2/ucrt64/bin
     JAVAHOME doit etre set dans /opt
     """
     ...

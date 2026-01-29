@@ -18,7 +18,7 @@ Composants installables :
 - rust        : Compilateur Rust et Cargo
 - nasm        : Assembleur NASM + GDB (débogueur)
 - qemu        : Émulateur de machines virtuelles
-- postgresql  : Serveur de base de données PostgreSQL (avec initialisation automatique)
+- postgresql  : Serveur de base de données PostgreSQL (avec initialisation automatique) et pgmodeler
 
 Opérations PostgreSQL :
 -----------------------
@@ -181,16 +181,17 @@ def install_postgresql():
     """
     Installe et initialise postgresql
     """
-    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-postgresql")
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-postgresql mingw-w64-ucrt-x86_64-pgmodeler")
+
+    
     postgres_init()
 
 
 def get_database_dir():
+    """Retourne le chemin du répertoire DATABASE au format approprié pour le système."""
     home_windows = os.environ['USERPROFILE']
-
     # Conversion du chemin Windows vers le format MSYS2 avec cygpath
-    database_msys2 = f"$(cygpath -u '{home_windows}')/DATABASE"
-    return database_msys2
+    return f"$(cygpath -u '{home_windows}')/DATABASE"
 
 @msys2_needed
 def postgres_init():
@@ -199,6 +200,19 @@ def postgres_init():
     le superuser est padawan et le mot de passe aussi
     """
     database_msys2 = get_database_dir()
+    database_local = os.path.join(os.path.expanduser("~"), "DATABASE")
+
+    # Vérification si le répertoire existe déjà
+    if os.path.exists(database_local):
+        utils.log_warning(f"Le répertoire {database_local} existe déjà.")
+        reponse = input("Voulez-vous le supprimer et réinitialiser PostgreSQL ? (oui/non) : ").strip().lower()
+        if reponse not in ("oui", "o", "yes", "y"):
+            utils.log_info("Initialisation annulée.")
+            return
+        # Suppression du répertoire existant
+        import shutil
+        shutil.rmtree(database_local)
+        utils.log_info("Répertoire supprimé.")
 
     # Création du répertoire pour la base de données
     msys2.executer(f"mkdir -p {database_msys2}")

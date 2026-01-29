@@ -122,3 +122,9 @@ def update_from_template():
                 log_error(f"Erreur lors de l'ajout des dépendances: {e}")
 
     return True
+
+
+if __name__ == "__main__":
+    import sys
+    success = update_from_template()
+    sys.exit(0 if success else 1)

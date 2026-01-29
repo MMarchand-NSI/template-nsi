@@ -187,6 +187,48 @@
             },
             "command": "${input:openSiteProf}",
             "problemMatcher": []
+        },
+        {
+            "label": "🔗 Configurer mon dépôt personnel",
+            "icon": {
+                "id": "repo",
+                "color": "terminal.ansiGreen"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/init_repo.py"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🔄 Mise à jour depuis le template",
+            "icon": {
+                "id": "repo-sync",
+                "color": "terminal.ansiBlue"
+            },
+            "type": "process",
+            "command": "uv",
+            "args": [
+                "run",
+                "python",
+                "${workspaceFolder}/.vscode/update.py"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "focus": true,
+                "clear": true
+            },
+            "problemMatcher": []
         }
     ],
     "inputs": [

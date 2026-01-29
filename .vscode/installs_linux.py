@@ -185,6 +185,18 @@ def postgres_init():
     pm = detect_package_manager()
     database_dir = get_database_dir()
 
+    # Vérification si le répertoire existe déjà
+    if Path(database_dir).exists():
+        print(f"⚠️  Le répertoire {database_dir} existe déjà.")
+        reponse = input("Voulez-vous le supprimer et réinitialiser PostgreSQL ? (oui/non) : ").strip().lower()
+        if reponse not in ("oui", "o", "yes", "y"):
+            print("ℹ️  Initialisation annulée.")
+            return
+        # Suppression du répertoire existant
+        import shutil
+        shutil.rmtree(database_dir)
+        print("ℹ️  Répertoire supprimé.")
+
     print("✨ Initialisation de PostgreSQL...")
 
     # Créer le répertoire pour la base de données
