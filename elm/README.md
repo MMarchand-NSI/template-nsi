@@ -20,19 +20,3 @@ elm init
 Cette commande créera :
 - Un fichier `elm.json` contenant la configuration du projet
 - Un répertoire `src/` pour votre code source
-
-## Compilation et exécution
-
-Pour compiler un fichier Elm :
-
-```bash
-elm make src/Main.elm
-```
-
-Pour lancer le serveur de développement avec rechargement automatique :
-
-```bash
-elm reactor
-```
-
-Ouvrez ensuite votre navigateur à l'adresse `http://localhost:8000`
