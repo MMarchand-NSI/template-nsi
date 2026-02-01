@@ -15,6 +15,7 @@ Composants installables :
 - nasm        : Assembleur NASM + GDB (débogueur)
 - qemu        : Émulateur de machines virtuelles
 - postgresql  : Serveur de base de données PostgreSQL (avec initialisation automatique)
+- graphviz    : Outil de visualisation de graphes (dot, neato, etc.)
 
 Opérations PostgreSQL :
 -----------------------
@@ -53,6 +54,7 @@ import subprocess
 import sys
 import os
 from pathlib import Path
+from components_info import confirm_installation
 
 
 def check_homebrew():
@@ -107,6 +109,10 @@ def install_package(package_name: str, brew_pkg: str, cask: bool = False):
 
 def install_elm():
     """Installe nodejs et elm (via npm)"""
+    if not confirm_installation("elm"):
+        print("ℹ️  Installation annulée.")
+        return
+
     install_package("Node.js", brew_pkg="node")
     print("✨ Installation d'Elm via npm...")
     executer("npm install -g elm")
@@ -115,6 +121,10 @@ def install_elm():
 
 def install_rust():
     """Installe Rust via rustup (méthode recommandée) ou Homebrew"""
+    if not confirm_installation("rust"):
+        print("ℹ️  Installation annulée.")
+        return
+
     print("✨ Installation de Rust...")
 
     # Vérifier si rustup est déjà installé
@@ -145,17 +155,38 @@ def install_rust():
 
 def install_nasm():
     """Installe NASM et GDB"""
+    if not confirm_installation("nasm"):
+        print("ℹ️  Installation annulée.")
+        return
+
     install_package("NASM", brew_pkg="nasm")
     install_package("GDB", brew_pkg="gdb")
 
 
 def install_qemu():
     """Installe QEMU"""
+    if not confirm_installation("qemu"):
+        print("ℹ️  Installation annulée.")
+        return
+
     install_package("QEMU", brew_pkg="qemu")
+
+
+def install_graphviz():
+    """Installe Graphviz"""
+    if not confirm_installation("graphviz"):
+        print("ℹ️  Installation annulée.")
+        return
+
+    install_package("Graphviz", brew_pkg="graphviz")
 
 
 def install_postgresql():
     """Installe et initialise PostgreSQL"""
+    if not confirm_installation("postgresql"):
+        print("ℹ️  Installation annulée.")
+        return
+
     install_package("PostgreSQL", brew_pkg="postgresql@16")
     postgres_init()
 
@@ -216,6 +247,17 @@ def postgres_init():
 
 def postgres_start():
     """Démarre l'instance PostgreSQL"""
+    # Vérifier si déjà démarré
+    result = subprocess.run(
+        "brew services list | grep postgresql@16",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+    if "started" in result.stdout:
+        print("✅ Le serveur PostgreSQL est déjà démarré")
+        return
+
     print("✨ Démarrage de PostgreSQL...")
     executer("brew services start postgresql@16")
     print("✅ Serveur PostgreSQL démarré")
@@ -241,7 +283,8 @@ INSTALLATIONS = {
     "rust": install_rust,
     "nasm": install_nasm,
     "qemu": install_qemu,
-    "postgresql": install_postgresql
+    "postgresql": install_postgresql,
+    "graphviz": install_graphviz
 }
 
 # Dictionnaire des opérations PostgreSQL

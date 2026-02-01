@@ -35,7 +35,8 @@ dev = [
     "pytest-cov>=7.0.0",    # Outil de couverture de tests
     "pdoc3>=0.11.6",        # Outil de documentation
     "psutil>=7.2.1",        # Outil pour cles usb
-    "djlint>=1.36.4",        # Outil linting web
+    "djlint>=1.36.4",       # Outil linting web
+    "colorama>=0.4.6",      # Couleurs dans le terminal
 ]
 
 # connfiguration des tests

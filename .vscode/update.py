@@ -1,18 +1,23 @@
 """
-TODO tester
-Mise à jour des fichiers depuis le web
+update.py - Mise à jour des fichiers depuis le template distant
+
+Ce module permet de synchroniser le projet avec le template du professeur
+tout en préservant les dépendances personnelles ajoutées par l'élève.
 """
 
-import urllib.request
+import subprocess
+import tomllib
 from pathlib import Path
+from utils import log_info, log_success, log_error
 
-# Ce repo contient le template que constitue ce projet 
-# Les personnes ont fait  
+# Ce repo contient le template que constitue ce projet
+# Les personnes ont fait
 #      - git clone https://github.com/MMarchand-NSI/template-nsi.git monrepertoire
 #      - cd mon-projet
 #      - git remote rename origin template
 
 REPO_URL = "https://github.com/MMarchand-NSI/template-nsi.git"
+
 
 def update_from_template():
     """
@@ -31,11 +36,6 @@ def update_from_template():
     Returns:
         bool: True si la mise à jour s'est bien déroulée, False en cas d'erreur
     """
-    import subprocess
-    import tomllib
-    from pathlib import Path
-    from utils import log_info, log_success, log_error
-
     remote_name = "template"
     pyproject_path = Path("pyproject.toml")
 

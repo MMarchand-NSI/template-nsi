@@ -3,14 +3,23 @@ msys2.py - Gestionnaire MSYS2 pour Windows
 
 Ce module fournit des fonctions pour installer, configurer et utiliser MSYS2.
 
-Le décorateur @msys2_needed peut être utilisé pour garantir qu'une fonction
-ne s'exécute que si MSYS2 est installé :
+Deux décorateurs sont disponibles :
 
-    from msys2 import msys2_needed
+@msys2_required - Vérifie simplement que MSYS2 est installé (pour les opérations rapides)
+@msys2_update   - Vérifie + met à jour MSYS2 (pour les installations de composants)
 
-    @msys2_needed
-    def ma_fonction():
-        msys2.executer("pacman -Syu")
+Exemples:
+    from msys2 import msys2_required, msys2_update
+
+    @msys2_required
+    def postgres_start():
+        # Opération rapide, pas besoin de mise à jour
+        ...
+
+    @msys2_update
+    def install_rust():
+        # Installation, on veut s'assurer que MSYS2 est à jour
+        msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-rust")
 """
 
 from pathlib import Path
@@ -21,24 +30,59 @@ import os
 from functools import wraps
 
 
-def msys2_needed(func):
+def _check_msys2_installed(func_name: str) -> bool:
+    """
+    Vérifie si MSYS2 est installé.
+
+    Args:
+        func_name: Nom de la fonction appelante (pour le message d'erreur)
+
+    Returns:
+        True si MSYS2 est installé, False sinon
+    """
+    if not get_path().exists():
+        utils.log_error(f"MSYS2 n'est pas installé. La fonction '{func_name}' nécessite MSYS2.")
+        utils.log_info("Installez MSYS2 en exécutant la tâche '🧩 Installer Composant' et en choisissant 'msys2'")
+        return False
+    return True
+
+
+def msys2_required(func):
     """
     Décorateur pour les fonctions nécessitant MSYS2.
     Vérifie que MSYS2 est installé avant d'exécuter la fonction.
-    Si MSYS2 n'est pas installé, logue une erreur et n'exécute pas la fonction.
+    Ne met PAS à jour MSYS2 (utilisez @msys2_update pour cela).
 
     Usage:
-        @msys2_needed
-        def ma_fonction():
-            # code qui nécessite MSYS2
+        @msys2_required
+        def postgres_start():
+            # opération rapide
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if not get_path().exists():
-            error_msg = f"MSYS2 n'est pas installé. La fonction '{func.__name__}' nécessite MSYS2."
-            utils.log_error(error_msg)
-            utils.log_info("Installez MSYS2 en exécutant la tâche '🧩 Installer Composant' et en choisissant 'msys2'")
+        if not _check_msys2_installed(func.__name__):
             return None
+        return func(*args, **kwargs)
+    return wrapper
+
+
+def msys2_update(func):
+    """
+    Décorateur pour les fonctions d'installation nécessitant MSYS2.
+    Vérifie que MSYS2 est installé ET met à jour MSYS2 avant d'exécuter la fonction.
+
+    Usage:
+        @msys2_update
+        def install_rust():
+            msys2.executer("pacman -S ...")
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not _check_msys2_installed(func.__name__):
+            return None
+        utils.log_info("Mise à jour de MSYS2...")
+        mettre_a_jour()
+        utils.log_info("Fin de mise à jour")
         return func(*args, **kwargs)
     return wrapper
 
@@ -142,7 +186,7 @@ def add_usrt64_2_path():
     set_env_var("Path", new_path)
     utils.log_success(f"Ajouté {ucrt64_bin} au PATH utilisateur")
 
-@msys2_needed
+@msys2_required
 def executer(cmd: str):
     """
     Exécute une commande dans msys2 ucrt64.
@@ -189,9 +233,6 @@ def executer(cmd: str):
 
 
 
-
-
-@msys2_needed
 def mettre_a_jour():
     """Met à jour MSYS2 via pacman -Syu --no-confirm
     Le faire 2 fois en cas de core upgrade pour full upgrade

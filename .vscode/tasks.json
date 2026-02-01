@@ -51,26 +51,6 @@
             "problemMatcher": []
         },
         {
-            "label": "🛠️ Setup Manuel",
-            "type": "process",
-            "command": "uv",
-            "args": [
-                "run",
-                "python",
-                "${workspaceFolder}/.vscode/setup.py"
-            ],
-            "dependsOn": [
-                "uv sync"
-            ],
-            "dependsOrder": "sequence",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new",
-                "focus": true
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "🧩 Installer Composant",
             "icon": {
                 "id": "cloud-download",
@@ -93,33 +73,10 @@
             "problemMatcher": []
         },
         {
-            "label": "🐘 🚀 PostgreSQL: Démarrer",
+            "label": "🐘 PostgreSQL",
             "icon": {
-                "id": "debug-start",
-                "color": "terminal.ansiGreen"
-            },
-            "type": "process",
-            "promptOnClose": true,
-            "command": "uv",
-            "args": [
-                "run",
-                "python",
-                "${workspaceFolder}/.vscode/install_wrapper.py",
-                "postgres-start"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "focus": false,
-                "clear": true
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "🐘 🌙 PostgreSQL: Arrêter",
-            "icon": {
-                "id": "debug-stop",
-                "color": "terminal.ansiRed"
+                "id": "database",
+                "color": "terminal.ansiBlue"
             },
             "type": "process",
             "command": "uv",
@@ -127,7 +84,7 @@
                 "run",
                 "python",
                 "${workspaceFolder}/.vscode/install_wrapper.py",
-                "postgres-stop"
+                "${input:postgresAction}"
             ],
             "presentation": {
                 "reveal": "always",
@@ -148,7 +105,8 @@
             "args": [
                 "run",
                 "python",
-                "${workspaceFolder}/.vscode/run_sauvegarde.py"
+                "${workspaceFolder}/.vscode/cleusb.py",
+                "sauvegarde"
             ],
             "presentation": {
                 "reveal": "always",
@@ -169,7 +127,8 @@
             "args": [
                 "run",
                 "python",
-                "${workspaceFolder}/.vscode/run_import.py"
+                "${workspaceFolder}/.vscode/cleusb.py",
+                "import"
             ],
             "presentation": {
                 "reveal": "always",
@@ -242,9 +201,20 @@
                 "rust",
                 "nasm",
                 "qemu",
-                "postgresql"
+                "postgresql",
+                "graphviz"
             ],
             "default": "rust"
+        },
+        {
+            "id": "postgresAction",
+            "type": "pickString",
+            "description": "Quelle action PostgreSQL ?",
+            "options": [
+                "postgres-start",
+                "postgres-stop"
+            ],
+            "default": "postgres-start"
         },
         {
             "id": "openSiteProf",

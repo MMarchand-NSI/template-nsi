@@ -19,6 +19,7 @@ Composants installables :
 - nasm        : Assembleur NASM + GDB (débogueur)
 - qemu        : Émulateur de machines virtuelles
 - postgresql  : Serveur de base de données PostgreSQL (avec initialisation automatique) et pgmodeler
+- graphviz    : Outil de visualisation de graphes (dot, neato, etc.)
 
 Opérations PostgreSQL :
 -----------------------
@@ -67,8 +68,9 @@ import subprocess
 import sys
 import os
 import msys2
-from msys2 import msys2_needed
+from msys2 import msys2_required, msys2_update
 import utils
+from components_info import confirm_installation
 
 if sys.platform == "win32":
     import winreg
@@ -143,47 +145,82 @@ def install_msys2():
     Met à jour dans tous les cas.
     Ouvre un shell MSYS2 pour l'initialisation"""
 
+    if not confirm_installation("msys2"):
+        utils.log_info("Installation annulée.")
+        return
+
     msys2.installer()
 
 
-@msys2_needed
+@msys2_update
 def install_elm():
     """Installe nodejs et elm (via npm) dans msys2"""
+    if not confirm_installation("elm"):
+        utils.log_info("Installation annulée.")
+        return
+
     msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-nodejs")
     msys2.executer("npm install -g elm")
 
 
-@msys2_needed
+@msys2_update
 def install_rust():
     """
     Installe Rust dans msys2
     """
+    if not confirm_installation("rust"):
+        utils.log_info("Installation annulée.")
+        return
+
     msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-rust")
 
 
-@msys2_needed
+@msys2_update
 def install_nasm():
     """
     Installe nasm dans msys2
     """
+    if not confirm_installation("nasm"):
+        utils.log_info("Installation annulée.")
+        return
+
     msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-nasm mingw-w64-ucrt-x86_64-gdb")
 
-@msys2_needed
+@msys2_update
 def install_qemu():
     """
-    Installe nasm dans msys2
+    Installe qemu dans msys2
     """
+    if not confirm_installation("qemu"):
+        utils.log_info("Installation annulée.")
+        return
+
     msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-qemu")
 
 
-@msys2_needed
+@msys2_update
+def install_graphviz():
+    """
+    Installe graphviz dans msys2
+    """
+    if not confirm_installation("graphviz"):
+        utils.log_info("Installation annulée.")
+        return
+
+    msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-graphviz")
+
+
+@msys2_update
 def install_postgresql():
     """
     Installe et initialise postgresql
     """
+    if not confirm_installation("postgresql"):
+        utils.log_info("Installation annulée.")
+        return
+
     msys2.executer("pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-postgresql mingw-w64-ucrt-x86_64-pgmodeler")
 
-    
     postgres_init()
 
 
@@ -193,7 +230,7 @@ def get_database_dir():
     # Conversion du chemin Windows vers le format MSYS2 avec cygpath
     return f"$(cygpath -u '{home_windows}')/DATABASE"
 
-@msys2_needed
+@msys2_required
 def postgres_init():
     """
     Initialise postgresql en UTF-8 français dans le home utilisateur/DATABASE
@@ -227,7 +264,7 @@ def postgres_init():
     msys2.executer("rm /tmp/pwfile")
 
 
-@msys2_needed
+@msys2_required
 def postgres_start():
     """Démarre l'instance PostgreSQL"""
     database_msys2 = get_database_dir()
@@ -236,18 +273,18 @@ def postgres_start():
     try:
         msys2.executer(f"pg_ctl -D {database_msys2} status")
         # Si on arrive ici, le serveur tourne déjà
-        utils.log_info("Le serveur PostgreSQL est déjà démarré")
+        utils.log_success("Le serveur PostgreSQL est déjà démarré")
         return
     except subprocess.CalledProcessError:
         # Le serveur n'est pas démarré, on continue
         pass
 
-    # Démarrage du serveur (option -W pour ne pas attendre, mais test sans)
+    # Démarrage du serveur
     msys2.executer(f"pg_ctl -D {database_msys2} -l {database_msys2}/logfile start")
     utils.log_success("Serveur PostgreSQL démarré")
 
 
-@msys2_needed
+@msys2_required
 def postgres_stop():
     """Arrête l'instance PostgreSQL"""
     database_msys2 = get_database_dir()
@@ -255,7 +292,7 @@ def postgres_stop():
     utils.log_success("Serveur PostgreSQL arrêté")
 
 
-@msys2_needed
+@msys2_required
 def postgres_create_db(nom: str):
     """Crée une base de données PostgreSQL"""
     msys2.executer(f"createdb -U padawan -E UTF8 {nom}")
@@ -269,7 +306,8 @@ INSTALLATIONS = {
     "rust": install_rust,
     "nasm": install_nasm,
     "qemu": install_qemu,
-    "postgresql": install_postgresql
+    "postgresql": install_postgresql,
+    "graphviz": install_graphviz
 }
 
 # Dictionnaire des opérations PostgreSQL

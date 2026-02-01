@@ -65,7 +65,7 @@ REQUIRED_EXTENSIONS = [
     # Utilitaires
     "aaron-bond.better-comments",
     "fill-labs.dependi",
-    "emanuelebartolesi.taskdeck",
+    "sanaajani.taskrunnercode",
     "tamasfe.even-better-toml"
 ]
 
@@ -155,12 +155,6 @@ def get_installed_extensions() -> set:
 def install_extension(extension_id: str) -> bool:
     """
     Installe une extension VSCode.
-
-    Args:
-        extension_id: ID de l'extension
-
-    Returns:
-        bool: True si l'installation a réussi
     """
     try:
         vscode_cmd = get_vscode_command()
@@ -177,9 +171,6 @@ def install_extension(extension_id: str) -> bool:
 def check_vscode_extensions() -> tuple[int, int, int]:
     """
     Vérifie et installe les extensions VSCode requises.
-    
-    Returns:
-        Tuple[int, int, int]: (installées, présentes, échouées)
     """
     installed_extensions = get_installed_extensions()
     
@@ -212,13 +203,36 @@ def check_vscode_extensions() -> tuple[int, int, int]:
 # GESTION DES VARIABLES D'ENVIRONNEMENT
 # ============================================================================
 
-def check_set_env_var():
+def check_set_env_var() -> bool:
     """
-    TODO Vérifier les variables d'environnement.
-    PATH utilisateur doit avoir msys2/ucrt64/bin
-    JAVAHOME doit etre set dans /opt
+    Sous windows seulement, le PATH utilisateur doit avoir PATH_MSYS2\\ucrt64\\bin
     """
-    ...
+    if platform.system() != "Windows":
+        return True
+
+    import msys2
+    from installs import get_env_var, set_env_var
+
+    # Vérifier si MSYS2 est installé
+    msys2_path = msys2.get_path()
+    if not msys2_path.exists():
+        # MSYS2 pas installé, pas de vérification nécessaire
+        return True
+
+    ucrt64_bin = str(msys2_path / "ucrt64" / "bin")
+    current_path = get_env_var("Path")
+
+    if ucrt64_bin.lower() in current_path.lower():
+        utils.log_success(f"PATH contient {ucrt64_bin} ✓")
+        return True
+
+    # Ajouter au PATH
+    utils.log_warning(f"{ucrt64_bin} manquant dans le PATH")
+    utils.log_info("Ajout au PATH utilisateur...")
+    new_path = f"{ucrt64_bin};{current_path}" if current_path else ucrt64_bin
+    set_env_var("Path", new_path)
+    utils.log_success(f"PATH mis à jour (redémarrage de VSCode recommandé)")
+    return True
 
 
 # ============================================================================
@@ -235,7 +249,7 @@ def main():
     all_ok = True
     
     # 1. Vérifier pyproject.toml
-    utils.log_info("1/2 Vérification de pyproject.toml...")
+    utils.log_info("1/3 Vérification de pyproject.toml...")
     try:
         if not check_pyproject_toml():
             all_ok = False
@@ -243,12 +257,22 @@ def main():
         utils.log_error(f"Erreur: {e}")
         all_ok = False
     print()
-    
+
     # 2. Vérifier les extensions VSCode
-    utils.log_info("2/2 Vérification des extensions VSCode...")
+    utils.log_info("2/3 Vérification des extensions VSCode...")
     try:
         installed, present, failed = check_vscode_extensions()
         if failed > 0:
+            all_ok = False
+    except Exception as e:
+        utils.log_error(f"Erreur: {e}")
+        all_ok = False
+    print()
+
+    # 3. Vérifier les variables d'environnement (PATH MSYS2)
+    utils.log_info("3/3 Vérification des variables d'environnement...")
+    try:
+        if not check_set_env_var():
             all_ok = False
     except Exception as e:
         utils.log_error(f"Erreur: {e}")

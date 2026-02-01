@@ -161,3 +161,62 @@ def import_cle_vers_vscode():
             log_info(f"Import de {item.name} vers {dest_path}")
 
     log_success(f"Import terminé depuis {source}")
+
+
+def _confirm_sauvegarde() -> bool:
+    """Demande confirmation avant sauvegarde."""
+    print("⚠️  ATTENTION ⚠️")
+    print("Les données de votre clé USB vont être écrasées.")
+    print("Tous les dossiers existants dans PROG_NSI seront remplacés.")
+    print()
+    reponse = input("Êtes-vous sûr de vouloir continuer ? (oui/non) : ").strip().lower()
+    return reponse in ['oui', 'o', 'yes', 'y']
+
+
+def _confirm_import() -> bool:
+    """Demande confirmation avant import."""
+    print("⚠️  ATTENTION ⚠️")
+    print("Les données de votre répertoire VSCode vont être écrasées.")
+    print("Tous les dossiers existants seront remplacés par ceux de la clé USB.")
+    print()
+    reponse = input("Êtes-vous sûr de vouloir continuer ? (oui/non) : ").strip().lower()
+    return reponse in ['oui', 'o', 'yes', 'y']
+
+
+if __name__ == "__main__":
+    import sys
+
+    def print_usage():
+        print("Usage: python cleusb.py <commande>")
+        print()
+        print("Commandes disponibles:")
+        print("  sauvegarde  - Sauvegarde le projet vers la clé USB")
+        print("  import      - Importe le projet depuis la clé USB")
+
+    if len(sys.argv) < 2:
+        print_usage()
+        sys.exit(1)
+
+    commande = sys.argv[1].lower()
+
+    try:
+        if commande == "sauvegarde":
+            if _confirm_sauvegarde():
+                print()
+                sauvegarde()
+            else:
+                print("Sauvegarde annulée.")
+        elif commande == "import":
+            if _confirm_import():
+                print()
+                import_cle_vers_vscode()
+            else:
+                print("Import annulé.")
+        else:
+            log_error(f"Commande inconnue: {commande}")
+            print()
+            print_usage()
+            sys.exit(1)
+    except Exception as e:
+        log_error(f"Erreur: {e}")
+        sys.exit(1)
