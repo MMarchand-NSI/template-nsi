@@ -8,10 +8,22 @@ Bienvenue ! Ce guide t'explique comment utiliser ce projet pour tes cours de NSI
 
 ### 1. Récupérer le script d'installation
 
-Ton professeur te donne un fichier selon ton système :
-- **Windows** : `setup-nsi.bat`
-- **Linux** : `setup-nsi.sh`
-- **macOS** : `setup-nsi-macos.sh`
+Télécharge le fichier correspondant à ton système avec cette commande dans un terminal :
+
+**Windows** (PowerShell) :
+```powershell
+curl -o setup-nsi.bat https://raw.githubusercontent.com/MMarchand-NSI/template-nsi/refs/heads/main/.vscode/setup-nsi.bat
+```
+
+**Linux** :
+```bash
+curl -o setup-nsi.sh https://raw.githubusercontent.com/MMarchand-NSI/template-nsi/refs/heads/main/.vscode/setup-nsi.sh
+```
+
+**macOS** :
+```bash
+curl -o setup-nsi-macos.sh https://raw.githubusercontent.com/MMarchand-NSI/template-nsi/refs/heads/main/.vscode/setup-nsi-macos.sh
+```
 
 ### 2. Lancer le script
 
@@ -178,4 +190,3 @@ PROG-NSI/
 
 ---
 
-Bon courage ! 🚀
