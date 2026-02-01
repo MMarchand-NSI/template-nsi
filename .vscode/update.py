@@ -1,57 +1,54 @@
 """
-update.py - Mise à jour des fichiers depuis le template distant
+update.py - Mise à jour du dossier .vscode depuis le template distant
 
-Ce module permet de synchroniser le projet avec le template du professeur
-tout en préservant les dépendances personnelles ajoutées par l'élève.
+Ce module permet de synchroniser la configuration VSCode avec le template
+du professeur sans toucher aux fichiers de travail de l'élève.
 """
 
 import subprocess
-import tomllib
-from pathlib import Path
 from utils import log_info, log_success, log_error
-
-# Ce repo contient le template que constitue ce projet
-# Les personnes ont fait
-#      - git clone https://github.com/MMarchand-NSI/template-nsi.git monrepertoire
-#      - cd mon-projet
-#      - git remote rename origin template
 
 REPO_URL = "https://github.com/MMarchand-NSI/template-nsi.git"
 
 
 def update_from_template():
     """
-    Met à jour tous les fichiers et répertoires d'après le template distant.
+    Met à jour le dossier .vscode depuis le template distant.
 
     Cette fonction effectue les opérations suivantes:
-    1. Sauvegarde les dépendances actuelles du pyproject.toml
+    1. Sauvegarde l'état actuel avec un commit "pre update" (si des changements existent)
     2. Récupère les dernières modifications du remote 'template' (git fetch template)
-    3. Liste tous les fichiers présents dans template/main
-    4. Écrase tous les fichiers locaux avec ceux du template (git checkout template/main -- ...)
-    5. Réinjecte les dépendances personnelles qui n'étaient pas dans le template avec 'uv add'
+    3. Restaure le dossier .vscode depuis template/main
 
-    Cette approche permet de synchroniser complètement avec le template tout en
-    préservant les dépendances personnelles ajoutées au projet.
+    Les fichiers de travail de l'élève (python/, web/, etc.) ne sont pas modifiés.
 
     Returns:
         bool: True si la mise à jour s'est bien déroulée, False en cas d'erreur
     """
     remote_name = "template"
-    pyproject_path = Path("pyproject.toml")
 
-    # Sauvegarder les dépendances actuelles si pyproject.toml existe
-    saved_dependencies = []
-
-    if pyproject_path.exists():
-        log_info("Sauvegarde des dépendances actuelles...")
-        try:
-            with open(pyproject_path, "rb") as f:
-                data = tomllib.load(f)
-                saved_dependencies = data.get("project", {}).get("dependencies", [])
-                log_info(f"{len(saved_dependencies)} dépendances sauvegardées")
-        except Exception as e:
-            log_error(f"Erreur lors de la lecture de pyproject.toml: {e}")
-            # On continue quand même
+    # Sauvegarder l'état actuel avant la mise à jour
+    log_info("Sauvegarde de l'état actuel...")
+    try:
+        # Vérifier s'il y a des changements à commiter
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        if result.stdout.strip():
+            subprocess.run(["git", "add", "."], check=True)
+            subprocess.run(
+                ["git", "commit", "-m", "pre update config "],
+                check=True
+            )
+            log_success("État sauvegardé (commit 'pre update')")
+        else:
+            log_info("Aucun changement à sauvegarder")
+    except subprocess.CalledProcessError as e:
+        log_error(f"Erreur lors de la sauvegarde: {e}")
+        return False
 
     # Récupérer les dernières modifications du template
     log_info(f"Récupération des modifications depuis {remote_name}...")
@@ -65,61 +62,17 @@ def update_from_template():
         log_error(f"Erreur lors du fetch: {e}")
         return False
 
-    # Récupérer la liste de tous les fichiers du template
-    log_info("Récupération de la liste des fichiers du template...")
-    try:
-        result = subprocess.run(
-            ["git", "ls-tree", "-r", "--name-only", f"{remote_name}/main"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        files_to_update = result.stdout.strip().split('\n')
-        files_to_update = [f for f in files_to_update if f]  # Enlever les lignes vides
-        log_info(f"{len(files_to_update)} fichiers à mettre à jour")
-    except subprocess.CalledProcessError as e:
-        log_error(f"Erreur lors de la récupération de la liste des fichiers: {e}")
-        return False
-
-    # Mise à jour de tous les fichiers du template (écrasement)
-    log_info("Écrasement des fichiers avec ceux du template...")
+    # Mise à jour du dossier .vscode uniquement
+    log_info("Mise à jour du dossier .vscode...")
     try:
         subprocess.run(
-            ["git", "checkout", f"{remote_name}/main", "--"] + files_to_update,
+            ["git", "restore", "--source", f"{remote_name}/main", "--staged", "--worktree", ".vscode/"],
             check=True
         )
-        log_success(f"Tous les fichiers ({len(files_to_update)}) ont été écrasés depuis le template")
+        log_success("Dossier .vscode mis à jour depuis le template")
     except subprocess.CalledProcessError as e:
         log_error(f"Erreur lors de la mise à jour: {e}")
         return False
-
-    # Réinjecter les dépendances sauvegardées
-    if saved_dependencies:
-        log_info("Réinjection des dépendances personnelles...")
-
-        # Lire les nouvelles dépendances du template
-        try:
-            with open(pyproject_path, "rb") as f:
-                new_data = tomllib.load(f)
-                template_dependencies = set(new_data.get("project", {}).get("dependencies", []))
-        except Exception as e:
-            log_error(f"Erreur lors de la lecture du nouveau pyproject.toml: {e}")
-            return False
-
-        # Trouver les dépendances à ajouter (celles qui étaient dans l'ancien mais pas dans le nouveau)
-        deps_to_add = [d for d in saved_dependencies if d not in template_dependencies]
-
-        # Ajouter les dépendances avec uv
-        if deps_to_add:
-            log_info(f"Ajout de {len(deps_to_add)} dépendances personnelles...")
-            try:
-                subprocess.run(
-                    ["uv", "add"] + deps_to_add,
-                    check=True
-                )
-                log_success("Dépendances personnelles réinjectées")
-            except subprocess.CalledProcessError as e:
-                log_error(f"Erreur lors de l'ajout des dépendances: {e}")
 
     return True
 
