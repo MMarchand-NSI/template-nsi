@@ -202,7 +202,8 @@
                 "nasm",
                 "qemu",
                 "postgresql",
-                "graphviz"
+                "graphviz",
+                "java"
             ],
             "default": "rust"
         },
