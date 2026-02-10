@@ -223,6 +223,10 @@ def install_java():
     # Version Java à installer (LTS)
     java_version = "21"
 
+    # Installation de unzip si nécessaire
+    utils.log_info("Vérification des dépendances...")
+    msys2.executer("pacman -S --needed --noconfirm unzip")
+
     utils.log_info(f"Téléchargement du JDK Temurin {java_version}...")
 
     # URL de téléchargement Adoptium API (dernière version stable)
