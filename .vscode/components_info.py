@@ -60,6 +60,16 @@ COMPONENT_INFO = {
             "Langage DOT pour décrire les graphes"
         ],
         "size": "~50 Mo"
+    },
+    "java": {
+        "description": "Java (Eclipse Temurin) - Plateforme de développement Java",
+        "details": [
+            "JDK (Java Development Kit) complet",
+            "JRE (Java Runtime Environment)",
+            "Outils de développement (javac, jar, javadoc, etc.)",
+            "Configuration automatique de JAVA_HOME et PATH"
+        ],
+        "size": "~300 Mo"
     }
 }
 

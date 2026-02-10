@@ -211,6 +211,75 @@ def install_graphviz():
 
 
 @msys2_update
+def install_java():
+    """
+    Installe Eclipse Temurin JDK (Java) dans MSYS2.
+    Télécharge le JDK, l'extrait dans /opt, et configure JAVA_HOME et PATH.
+    """
+    if not confirm_installation("java"):
+        utils.log_info("Installation annulée.")
+        return
+
+    # Version Java à installer (LTS)
+    java_version = "21"
+
+    utils.log_info(f"Téléchargement du JDK Temurin {java_version}...")
+
+    # URL de téléchargement Adoptium API (dernière version stable)
+    download_url = f"https://api.adoptium.net/v3/binary/latest/{java_version}/ga/windows/x64/jdk/hotspot/normal/eclipse"
+
+    # Téléchargement dans /tmp
+    msys2.executer(f"curl -L '{download_url}' -o /tmp/temurin.zip")
+
+    utils.log_info("Extraction du JDK...")
+
+    # Création du répertoire /opt s'il n'existe pas
+    msys2.executer("mkdir -p /opt")
+
+    # Extraction de l'archive
+    msys2.executer("unzip -q /tmp/temurin.zip -d /opt")
+
+    # Récupération du nom du dossier extrait (jdk-21.x.x+xx)
+    result = subprocess.run(
+        [str(msys2.get_path() / "usr" / "bin" / "bash.exe"), "-lc", "ls /opt | grep '^jdk-'"],
+        capture_output=True,
+        text=True,
+        env={**os.environ, 'MSYSTEM': 'UCRT64'}
+    )
+    jdk_dir = result.stdout.strip().split('\n')[0] if result.returncode == 0 else f"jdk-{java_version}"
+
+    # Création d'un lien symbolique pour faciliter les mises à jour
+    msys2.executer("rm -f /opt/java")
+    msys2.executer(f"ln -s /opt/{jdk_dir} /opt/java")
+
+    # Nettoyage
+    msys2.executer("rm /tmp/temurin.zip")
+
+    # Configuration des variables d'environnement Windows
+    msys2_path = msys2.get_path()
+    java_home_windows = str(msys2_path / "opt" / "java")
+    java_bin_windows = str(msys2_path / "opt" / "java" / "bin")
+
+    utils.log_info("Configuration de JAVA_HOME et PATH...")
+
+    # Définir JAVA_HOME
+    set_env_var("JAVA_HOME", java_home_windows)
+
+    # Ajouter Java au PATH
+    current_path = get_env_var("Path")
+    if java_bin_windows not in current_path:
+        new_path = f"{java_bin_windows};{current_path}" if current_path else java_bin_windows
+        set_env_var("Path", new_path)
+        utils.log_success(f"Ajouté {java_bin_windows} au PATH utilisateur")
+    else:
+        utils.log_success(f"{java_bin_windows} est déjà dans le PATH")
+
+    utils.log_success(f"Java {java_version} (Temurin) installé avec succès")
+    utils.log_info(f"JAVA_HOME: {java_home_windows}")
+    utils.log_info("Redémarrez votre terminal pour appliquer les changements")
+
+
+@msys2_update
 def install_postgresql():
     """
     Installe et initialise postgresql
@@ -307,7 +376,8 @@ INSTALLATIONS = {
     "nasm": install_nasm,
     "qemu": install_qemu,
     "postgresql": install_postgresql,
-    "graphviz": install_graphviz
+    "graphviz": install_graphviz,
+    "java": install_java
 }
 
 # Dictionnaire des opérations PostgreSQL

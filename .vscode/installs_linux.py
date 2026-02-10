@@ -194,6 +194,55 @@ def install_graphviz():
     install_package("Graphviz", apt_pkg="graphviz", yum_pkg="graphviz")
 
 
+def install_java():
+    """Installe Eclipse Temurin JDK (Java)"""
+    if not confirm_installation("java"):
+        print("ℹ️  Installation annulée.")
+        return
+
+    pm = detect_package_manager()
+    java_version = "21"
+
+    print(f"✨ Installation de Java {java_version} (Eclipse Temurin)...")
+
+    if pm == "apt":
+        # Pour Debian/Ubuntu, on utilise le repository Adoptium
+        print("📦 Ajout du repository Adoptium...")
+        executer("apt install -y wget apt-transport-https", use_sudo=True)
+        executer("wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null", use_sudo=True)
+        executer('echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= \'/^VERSION_CODENAME/{print$2}\' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list', use_sudo=True)
+        executer("apt update", use_sudo=True)
+        executer(f"apt install -y temurin-{java_version}-jdk", use_sudo=True)
+
+    elif pm in ["dnf", "yum"]:
+        # Pour Red Hat/CentOS/Fedora, on utilise aussi le repository Adoptium
+        print("📦 Ajout du repository Adoptium...")
+        repo_file = "/etc/yum.repos.d/adoptium.repo"
+        repo_content = """[Adoptium]
+name=Adoptium
+baseurl=https://packages.adoptium.net/artifactory/rpm/centos/\\$releasever/\\$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.adoptium.net/artifactory/api/gpg/key/public"""
+
+        executer(f"echo '{repo_content}' | tee {repo_file}", use_sudo=True)
+
+        if pm == "dnf":
+            executer(f"dnf install -y temurin-{java_version}-jdk", use_sudo=True)
+        else:
+            executer(f"yum install -y temurin-{java_version}-jdk", use_sudo=True)
+
+    # Vérification de l'installation
+    result = subprocess.run("java -version", shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        print(f"✅ Java {java_version} (Temurin) installé avec succès")
+        print(f"ℹ️  Version installée:")
+        print(result.stderr.split('\n')[0])  # java -version affiche sur stderr
+    else:
+        print("⚠️  Installation terminée, mais la vérification a échoué")
+        print("ℹ️  Vous devrez peut-être redémarrer votre terminal")
+
+
 def install_postgresql():
     """Installe et initialise PostgreSQL"""
     if not confirm_installation("postgresql"):
@@ -309,7 +358,8 @@ INSTALLATIONS = {
     "nasm": install_nasm,
     "qemu": install_qemu,
     "postgresql": install_postgresql,
-    "graphviz": install_graphviz
+    "graphviz": install_graphviz,
+    "java": install_java
 }
 
 # Dictionnaire des opérations PostgreSQL
